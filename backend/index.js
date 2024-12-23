@@ -235,6 +235,8 @@ docker.getEvents((err, stream) => {
 app.get('/api/stats', async (req, res) => {
   try {
     const containers = await docker.listContainers();
+
+    // get the all images 
     const images = await docker.listImages();
     
     // Calculate request statistics
@@ -308,16 +310,16 @@ app.post('/api/containers', async (req, res) => {
       Image: `${image}:${tag}`,
       name,
       Env: env,
-      ExposedPorts: ports.reduce((acc, port) => {
-        acc[`${port}/tcp`] = {};
-        return acc;
-      }, {}),
+      // ExposedPorts: ports.reduce((acc, port) => {
+      //   acc[`${port}/tcp`] = {};
+      //   return acc;
+      // }, {}),
       HostConfig: {
         AutoRemove: true,
-        PortBindings: ports.reduce((acc, port) => {
-          acc[`${port}/tcp`] = [{ HostPort: '' }];
-          return acc;
-        }, {})
+        // PortBindings: ports.reduce((acc, port) => {
+        //   acc[`${port}/tcp`] = [{ HostPort: '' }];
+        //   return acc;
+        // }, {})
       }
     });
 
@@ -362,36 +364,7 @@ app.get('/api/logs', (req, res) => {
   res.json(filteredLogs.slice(0, parseInt(limit)));
 });
 
-// Settings endpoints
-let settings = {
-  general: {
-    defaultNetwork: 'bridge',
-    autoRemove: true,
-    maxContainers: 10,
-    refreshInterval: 30
-  },
-  logging: {
-    level: 'info',
-    retention: '7d',
-    maxSize: '100mb',
-    compression: true
-  },
-  security: {
-    enableAuth: false,
-    allowedHosts: 'localhost',
-    enableSSL: false
-  }
-};
 
-app.get('/api/settings', (req, res) => {
-  res.json(settings);
-});
-
-app.post('/api/settings', (req, res) => {
-  settings = { ...settings, ...req.body };
-  logEvent('info', 'Settings updated');
-  res.json({ status: 'success', settings });
-});
 
 // Reverse proxy setup
 const reverseProxyApp = express();
